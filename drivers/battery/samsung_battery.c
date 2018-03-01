@@ -74,11 +74,7 @@ static int battery_get_lpm_state(char *str)
 
 	return lpcharge;
 }
-<<<<<<< HEAD
-__setup("lpcharge=", battery_get_lpm_state);
-=======
 __setup("androidboot.mode=", battery_get_lpm_state);
->>>>>>> fc3bffe... Add offline charging
 
 /* For KitKat bootloader compatibility */
 static int bootloader_get_lpm_state(char *str)
@@ -90,12 +86,8 @@ static int bootloader_get_lpm_state(char *str)
 
 	return lpcharge;
 }
-<<<<<<< HEAD
-__setup("androidboot.mode=", bootloader_get_lpm_state);
-=======
 __setup("lpcharge=", bootloader_get_lpm_state);
 
->>>>>>> fc3bffe... Add offline charging
 EXPORT_SYMBOL(lpcharge);
 
 /* Cable type from charger or adc */
