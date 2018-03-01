@@ -10,9 +10,9 @@
 # Parameters to be configured manually
 #######################################
 
-BOEFFLA_VERSION="6.1-beta1-boeffla-kozmo21_beta1-n7105"
+BOEFFLA_VERSION="Alpha-2-Boeffla-Kernel"
 
-TOOLCHAIN="/home/john/Boeffla/gcc-linaro-5.3-2016.02-x86_64_arm-eabi/bin/arm-eabi-"
+TOOLCHAIN="/home/john/Boeffla_DM3/toolchain/arm-eabi-6.x/bin/arm-eabi-"
 ARCHITECTURE=arm
 COMPILER_FLAGS_KERNEL="-mtune=cortex-a9 -fno-diagnostics-show-caret"
 COMPILER_FLAGS_MODULE="-mtune=cortex-a9 -fno-diagnostics-show-caret"
@@ -24,10 +24,10 @@ DTBTOOL_CMD=""
 MODULES_IN_SYSTEM="y"
 OUTPUT_FOLDER=""
 
-DEFCONFIG="beta2_t0lte_defconfig"
+DEFCONFIG="lineageos_t0lte_defconfig"
 DEFCONFIG_VARIANT=""
 
-KERNEL_NAME="Boeffla-Kernel"
+KERNEL_NAME="DM3-Boeffla-Kernel"
 
 FINISH_MAIL_TO=""
 
@@ -55,8 +55,9 @@ ROOT_PATH=$PWD
 ROOT_DIR_NAME=`basename "$PWD"`
 cd $SOURCE_PATH
 
-BUILD_PATH="$ROOT_PATH/build"
-REPACK_PATH="$ROOT_PATH/repack"
+WDIR="/home/$(whoami)/Desktop/Boeffla"
+BUILD_PATH="$WDIR/build"
+REPACK_PATH="$WDIR/repack"
 
 BOEFFLA_DATE=$(date +%Y%m%d)
 GIT_BRANCH=`git symbolic-ref --short HEAD`
@@ -98,9 +99,9 @@ step0_copy_code()
 	# (usage of * prevents .git folder to be copied)
 	cp -r $SOURCE_PATH/* $BUILD_PATH
 
-	# Replace version information in mkcompile_h with the one from x-settings.sh
-	sed "s/\`echo \$LINUX_COMPILE_BY | \$UTS_TRUNCATE\`/$KERNEL_NAME-$BOEFFLA_VERSION-$BOEFFLA_DATE/g" -i $BUILD_PATH/scripts/mkcompile_h
-	sed "s/\`echo \$LINUX_COMPILE_HOST | \$UTS_TRUNCATE\`/rodman01/g" -i $BUILD_PATH/scripts/mkcompile_h
+  	# Replace version information in mkcompile_h with the one from x-settings.sh
+  	sed "s/\`echo \$LINUX_COMPILE_BY | \$UTS_TRUNCATE\`/$KERNEL_NAME-$BOEFFLA_VERSION-$BOEFFLA_DATE/g" -i $BUILD_PATH/scripts/mkcompile_h
+	sed "s/\`echo \$LINUX_COMPILE_HOST | \$UTS_TRUNCATE\`/kozmo21/g" -i $BUILD_PATH/scripts/mkcompile_h
 }
 
 step1_make_clean()
@@ -286,7 +287,7 @@ step7_analyse_log()
 	echo -e "\n***************************************************"
 	echo -e "Check for compile errors:"
 
-	cd $ROOT_PATH
+	cd $WDIR
 	echo -e $COLOR_RED
 	grep " error" compile.log
 	grep "forbidden warning" compile.log
@@ -408,6 +409,7 @@ display_help()
 	echo "rel = all, execute steps 0-9 - without CCACHE  |  r = rewrite config"
 	echo "a   = all, execute steps 0-9                   |  c = cleanup"
 	echo "u   = upd, execute steps 3-9                   |  b = backup"
+	echo "ur  = upd, execute steps 5-9                   |  w = factory wipe"
 	echo
 	echo "======================================================================"
 	echo
@@ -440,6 +442,7 @@ unset CCACHE_DISABLE
 case "$1" in
 	rel)
 		export CCACHE_DISABLE=1
+		stepW_wipe
 		step0_copy_code
 		step1_make_clean
 		step2_make_config
@@ -451,6 +454,7 @@ case "$1" in
 		step9_send_finished_mail
 		;;
 	a)
+		stepW_wipe
 		step0_copy_code
 		step1_make_clean
 		step2_make_config
@@ -464,6 +468,12 @@ case "$1" in
 	u)
 		step3_compile
 		step4_prepare_anykernel
+		step5_create_anykernel_zip
+		step7_analyse_log
+		step8_transfer_kernel
+		step9_send_finished_mail
+		;;
+	ur)
 		step5_create_anykernel_zip
 		step7_analyse_log
 		step8_transfer_kernel
@@ -507,6 +517,9 @@ case "$1" in
 		;;
 	r)
 		stepR_rewrite_config
+		;;
+	w)
+		stepW_wipe
 		;;
 
 	*)
